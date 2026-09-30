@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:17.1
+    environment:
+      POSTGRES_DB: pixflow
+      POSTGRES_USER: pixflow
+      POSTGRES_PASSWORD: pixflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
