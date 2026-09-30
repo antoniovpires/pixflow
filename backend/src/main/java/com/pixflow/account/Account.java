@@ -46,6 +46,7 @@ public class Account {
     @Column(name = "currency")
     private String currency = "BRL";
 
+    @Getter
     @Version
     @Column(name = "version")
     private Long version;
