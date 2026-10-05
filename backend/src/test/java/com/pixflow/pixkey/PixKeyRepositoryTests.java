@@ -4,6 +4,7 @@ import com.pixflow.account.Account;
 import com.pixflow.account.AccountRepository;
 import com.pixflow.pixkey.PixKey;
 import com.pixflow.pixkey.PixKeyRepository;
+import com.pixflow.pixkey.KeyType;
 import com.pixflow.user.User;
 
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -43,15 +44,14 @@ class PixKeyRepositoryTests {
     @Autowired
     private TestEntityManager em;
 
-    private Account arrangeAccount() {
+    private Account arrangeAccount(String email) {
         User user = new User();
-        user.setEmail("ada@pixflow.test");
+        user.setEmail(email);
         user.setPasswordHash("hash");
         em.persist(user);
 
         Account account = new Account();
         account.setUser(user);
-        account.credit(new BigDecimal("100"));
         em.persist(account);
         em.flush();
         em.clear();
@@ -61,10 +61,8 @@ class PixKeyRepositoryTests {
 
       @Test
       void create() {
-          Account account = arrangeAccount();
-          PixKey pixKey = new PixKey();
-          pixKey.setAccount(account);
-          pixKey.setKeyValue("1234567890");
+          Account account = arrangeAccount("ada@pixflow.test");
+          PixKey pixKey = new PixKey(account, "1234567890", KeyType.PHONE);
           pixKeys.save(pixKey);
           em.flush();
           em.clear();
@@ -76,27 +74,22 @@ class PixKeyRepositoryTests {
 
       @Test
       void create_with_duplicate_key() {
-        Account account = arrangeAccount();
-        PixKey pixKey = new PixKey();
-        pixKey.setAccount(account);
-        pixKey.setKeyValue("1234567890");
+        Account account = arrangeAccount("ada@pixflow.test");
+        PixKey pixKey = new PixKey(account, "1234567890", KeyType.PHONE);
         pixKeys.save(pixKey);
         em.flush();
         em.clear();
 
-        PixKey pixKey2 = new PixKey();
-        pixKey2.setAccount(account);
-        pixKey2.setKeyValue("1234567890");
+        Account newAccount = arrangeAccount("john.doe@pixflow.test");
+        PixKey pixKey2 = new PixKey(newAccount, "1234567890", KeyType.PHONE);
         assertThatExceptionOfType(DataIntegrityViolationException.class)
         .isThrownBy(() -> pixKeys.saveAndFlush(pixKey2));
       }
 
       @Test
       void find_by_key_value() {
-        Account account = arrangeAccount();
-        PixKey pixKey = new PixKey();
-        pixKey.setAccount(account);
-        pixKey.setKeyValue("1234567890");
+        Account account = arrangeAccount("ada@pixflow.test");
+        PixKey pixKey = new PixKey(account, "1234567890", KeyType.PHONE);
         pixKeys.save(pixKey);
         em.flush();
         em.clear();

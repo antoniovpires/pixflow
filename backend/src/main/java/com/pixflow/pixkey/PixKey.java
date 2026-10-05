@@ -19,6 +19,9 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+
 @Entity
 @Table(name = "pixkeys")
 public class PixKey {
@@ -30,15 +33,18 @@ public class PixKey {
     private UUID id;
 
     @Getter
-    @Setter
-    @ManyToOne
+    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
     @JoinColumn(name = "account_id")
     private Account account;
 
     @Getter
-    @Setter
     @Column(name = "key_value", unique = true)
     private String keyValue;
+
+    @Getter
+    @Enumerated(EnumType.STRING)
+    @Column(name = "key_type", nullable = false,length = 16)
+    private KeyType keyType;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -47,4 +53,20 @@ public class PixKey {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    public PixKey(Account account, String keyValue, KeyType keyType) {
+        this.account = account;
+        this.keyValue = normalizeKeyValue(keyValue, keyType);
+        this.keyType = keyType;
+    }
+
+    protected PixKey() {}
+
+    private String normalizeKeyValue(String keyValue, KeyType keyType) {
+        if (keyType == KeyType.EMAIL) {
+            return keyValue.toLowerCase();
+        }
+        
+        return keyValue.replaceAll("[^0-9]", "");
+    }
 }
