@@ -1,0 +1,1 @@
+ALTER TABLE transfers ADD COLUMN idempotency_key VARCHAR(255) NOT NULL UNIQUE;

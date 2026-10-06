@@ -8,7 +8,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Version;
-
+import jakarta.persistence.FetchType;
 import com.pixflow.user.User;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -34,7 +34,7 @@ public class Account {
 
     @Getter
     @Setter
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 

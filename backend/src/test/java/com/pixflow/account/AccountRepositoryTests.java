@@ -1,7 +1,5 @@
 package com.pixflow.account;
 
-import com.pixflow.account.Account;
-import com.pixflow.account.AccountRepository;
 import com.pixflow.user.User;
 
 import org.testcontainers.postgresql.PostgreSQLContainer;
@@ -10,7 +8,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 
 import java.math.BigDecimal;
-import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

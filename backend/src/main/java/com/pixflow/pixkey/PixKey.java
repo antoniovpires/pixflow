@@ -8,7 +8,6 @@ import org.hibernate.annotations.UuidGenerator;
 import com.pixflow.account.Account;
 
 import lombok.Getter;
-import lombok.Setter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -21,6 +20,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 
 @Entity
 @Table(name = "pixkeys")
@@ -33,7 +33,7 @@ public class PixKey {
     private UUID id;
 
     @Getter
-    @ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id")
     private Account account;
 
