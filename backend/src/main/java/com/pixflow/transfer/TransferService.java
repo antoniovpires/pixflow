@@ -1,6 +1,7 @@
 package com.pixflow.transfer;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import java.util.Optional;
 
@@ -32,15 +33,32 @@ public class TransferService {
     this.pixKeyRepository = pixKeyRepository;
   }
 
+  public List<Transfer> getTransfersForAccount(UUID accountId) {
+    return transferRepository.findBySourceAccountIdOrTargetAccountIdOrderByCreatedAtDesc(accountId, accountId);
+  }
+
+  @Transactional(readOnly = true)
+  public Optional<Transfer> findReplay(UUID sourceAccountId, String pixKeyValue, BigDecimal amount, String idempotencyKey) {
+    return transferRepository.findBySourceAccountIdAndIdempotencyKey(sourceAccountId, idempotencyKey)
+      .map(existing -> {
+        boolean samePayload = existing.getPixKey().getKeyValue().equals(pixKeyValue)
+            && existing.getAmount().compareTo(amount) == 0;
+        if (!samePayload) {
+          throw new IdempotencyKeyReuseException("Idempotency key was already used with a different request");
+        }
+        return existing;
+      });
+  }
+
   @Transactional
   public Transfer createTransfer(UUID sourceAccountId, String pixKeyValue, BigDecimal amount, String idempotencyKey) {
     if (idempotencyKey == null || idempotencyKey.isEmpty()) {
       throw new IllegalArgumentException("Idempotency key cannot be null or empty");
     }
 
-    Optional<Transfer> existingTransfer = transferRepository.findByIdempotencyKey(idempotencyKey);
-    if (existingTransfer.isPresent()) {
-      return existingTransfer.get();
+    Optional<Transfer> replay = findReplay(sourceAccountId, pixKeyValue, amount, idempotencyKey);
+    if (replay.isPresent()) {
+      return replay.get();
     }
 
     Account sourceAccount = accountRepository.findById(sourceAccountId)

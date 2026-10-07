@@ -1,10 +1,18 @@
 package com.pixflow.web;
 
+import com.pixflow.account.AccountInUseException;
 import com.pixflow.account.AccountNotFoundException;
 import com.pixflow.account.InsufficientBalanceException;
+import com.pixflow.account.InvalidAccountException;
+import com.pixflow.pixkey.PixKeyAlreadyExistsException;
+import com.pixflow.pixkey.PixKeyInUseException;
+import com.pixflow.auth.EmailAlreadyUsedException;
+import com.pixflow.auth.InvalidCredentialsException;
 import com.pixflow.pixkey.PixKeyNotFoundException;
+import com.pixflow.transfer.IdempotencyKeyReuseException;
 import com.pixflow.transfer.InvalidTransferException;
 import com.pixflow.transfer.TransferConflictException;
+import com.pixflow.user.UserNotFoundException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,24 +28,36 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-// Translates exceptions into HTTP responses (RFC 7807 "problem details").
-// The base class already handles malformed JSON and similar framework errors.
 @RestControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
-  @ExceptionHandler({AccountNotFoundException.class, PixKeyNotFoundException.class})
+  @ExceptionHandler({AccountNotFoundException.class, PixKeyNotFoundException.class, UserNotFoundException.class})
   ProblemDetail handleNotFound(RuntimeException e) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, e.getMessage());
   }
 
-  @ExceptionHandler({InsufficientBalanceException.class, InvalidTransferException.class})
+  @ExceptionHandler({
+      InsufficientBalanceException.class,
+      InvalidTransferException.class,
+      InvalidAccountException.class,
+      IdempotencyKeyReuseException.class})
   ProblemDetail handleUnprocessable(RuntimeException e) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage());
   }
 
-  @ExceptionHandler(TransferConflictException.class)
-  ProblemDetail handleConflict(TransferConflictException e) {
+  @ExceptionHandler({
+      TransferConflictException.class,
+      AccountInUseException.class,
+      EmailAlreadyUsedException.class,
+      PixKeyAlreadyExistsException.class,
+      PixKeyInUseException.class})
+  ProblemDetail handleConflict(RuntimeException e) {
     return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, e.getMessage());
+  }
+
+  @ExceptionHandler(InvalidCredentialsException.class)
+  ProblemDetail handleInvalidCredentials(InvalidCredentialsException e) {
+    return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, e.getMessage());
   }
 
   @Override

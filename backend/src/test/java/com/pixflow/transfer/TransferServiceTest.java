@@ -167,4 +167,82 @@ class TransferServiceTest {
         assertThat(accounts.findById(target.getId()).orElseThrow().getBalance()).isEqualByComparingTo("20.00");
         assertThat(ledgerEntries.findByAccountId(source.getId())).isEmpty();
     }
+
+    @Test
+    void create_replays_same_idempotency_key_without_moving_money_twice() {
+        Account source = arrangeAccount("ada@pixflow.test", "100.00");
+        Account target = arrangeAccount("grace@pixflow.test", "20.00");
+        PixKey pixKey = arrangePixKey(target, "11988887777");
+
+        Transfer first = transfers.createTransfer(
+                source.getId(), pixKey.getKeyValue(), new BigDecimal("40.00"), "key-1");
+        em.flush();
+        em.clear();
+        Transfer replay = transfers.createTransfer(
+                source.getId(), pixKey.getKeyValue(), new BigDecimal("40.00"), "key-1");
+        em.flush();
+        em.clear();
+
+        assertThat(replay.getId()).isEqualTo(first.getId());
+        assertThat(accounts.findById(source.getId()).orElseThrow().getBalance()).isEqualByComparingTo("60.00");
+        assertThat(accounts.findById(target.getId()).orElseThrow().getBalance()).isEqualByComparingTo("60.00");
+        assertThat(ledgerEntries.findByTransferId(first.getId())).hasSize(2);
+        assertThat(ledgerEntries.findByAccountId(source.getId())).hasSize(1);
+    }
+
+    @Test
+    void create_rejects_idempotency_key_reused_with_different_amount() {
+        Account source = arrangeAccount("ada@pixflow.test", "100.00");
+        Account target = arrangeAccount("grace@pixflow.test", "20.00");
+        PixKey pixKey = arrangePixKey(target, "11988887777");
+        transfers.createTransfer(source.getId(), pixKey.getKeyValue(), new BigDecimal("40.00"), "key-1");
+        em.flush();
+        em.clear();
+
+        assertThatExceptionOfType(IdempotencyKeyReuseException.class)
+                .isThrownBy(() -> transfers.createTransfer(
+                        source.getId(), pixKey.getKeyValue(), new BigDecimal("5.00"), "key-1"));
+
+        assertThat(accounts.findById(source.getId()).orElseThrow().getBalance()).isEqualByComparingTo("60.00");
+    }
+
+    @Test
+    void create_rejects_idempotency_key_reused_with_different_pix_key() {
+        Account source = arrangeAccount("ada@pixflow.test", "100.00");
+        Account target = arrangeAccount("grace@pixflow.test", "20.00");
+        Account other = arrangeAccount("bruno@pixflow.test", "1.00");
+        PixKey graceKey = arrangePixKey(target, "11988887777");
+        PixKey brunoKey = arrangePixKey(other, "11977776666");
+        transfers.createTransfer(source.getId(), graceKey.getKeyValue(), new BigDecimal("40.00"), "key-1");
+        em.flush();
+        em.clear();
+
+        assertThatExceptionOfType(IdempotencyKeyReuseException.class)
+                .isThrownBy(() -> transfers.createTransfer(
+                        source.getId(), brunoKey.getKeyValue(), new BigDecimal("40.00"), "key-1"));
+
+        assertThat(accounts.findById(other.getId()).orElseThrow().getBalance()).isEqualByComparingTo("1.00");
+    }
+
+    @Test
+    void idempotency_keys_are_scoped_per_source_account() {
+        Account ada = arrangeAccount("ada@pixflow.test", "100.00");
+        Account carol = arrangeAccount("carol@pixflow.test", "100.00");
+        Account target = arrangeAccount("grace@pixflow.test", "1.00");
+        PixKey pixKey = arrangePixKey(target, "11988887777");
+
+        Transfer fromAda = transfers.createTransfer(
+                ada.getId(), pixKey.getKeyValue(), new BigDecimal("10.00"), "same-key");
+        em.flush();
+        em.clear();
+        Transfer fromCarol = transfers.createTransfer(
+                carol.getId(), pixKey.getKeyValue(), new BigDecimal("10.00"), "same-key");
+        em.flush();
+        em.clear();
+
+        assertThat(fromCarol.getId()).isNotEqualTo(fromAda.getId());
+        assertThat(accounts.findById(ada.getId()).orElseThrow().getBalance()).isEqualByComparingTo("90.00");
+        assertThat(accounts.findById(carol.getId()).orElseThrow().getBalance()).isEqualByComparingTo("90.00");
+        assertThat(accounts.findById(target.getId()).orElseThrow().getBalance()).isEqualByComparingTo("21.00");
+    }
 }

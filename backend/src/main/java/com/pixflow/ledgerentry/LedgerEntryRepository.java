@@ -8,4 +8,5 @@ import java.util.UUID;
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> {
   List<LedgerEntry> findByTransferId(UUID transferId);
   List<LedgerEntry> findByAccountId(UUID accountId);
+  List<LedgerEntry> findByAccountIdOrderByCreatedAtAsc(UUID accountId);
 }

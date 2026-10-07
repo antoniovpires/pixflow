@@ -187,9 +187,40 @@ public class TransferConcurrencyTests {
 
         assertEquals(2, count("SELECT count(*) FROM transfers WHERE status = 'SUCCESS'"));
         assertEquals(4, count("SELECT count(*) FROM ledger_entries"));
-        // Double entry: every real debit has a matching credit.
         assertEquals(2, count("SELECT count(*) FROM ledger_entries WHERE direction = 'DEBIT'"));
         assertEquals(2, count("SELECT count(*) FROM ledger_entries WHERE direction = 'CREDIT'"));
+    }
+
+    @RepeatedTest(20)
+    public void testSameIdempotencyKeyConcurrentlyMovesMoneyOnce() throws Exception {
+        arrange(new BigDecimal("100"));
+
+        ExecutorService pool = Executors.newFixedThreadPool(2);
+        CyclicBarrier barrier = new CyclicBarrier(2);
+
+        List<Future<Transfer>> futures = List.of(
+                pool.submit(() -> {
+                    barrier.await();
+                    return transferRetryService.createTransfer(
+                            ada.getId(), brunoPixKey.getKeyValue(), new BigDecimal("60.00"), "same-key");
+                }),
+                pool.submit(() -> {
+                    barrier.await();
+                    return transferRetryService.createTransfer(
+                            ada.getId(), brunoPixKey.getKeyValue(), new BigDecimal("60.00"), "same-key");
+                }));
+
+        Transfer a = futures.get(0).get(10, TimeUnit.SECONDS);
+        Transfer b = futures.get(1).get(10, TimeUnit.SECONDS);
+        pool.shutdown();
+        assertEquals(a.getId(), b.getId());
+
+        BigDecimal adaBalance = accountRepository.findById(ada.getId()).orElseThrow().getBalance();
+        BigDecimal brunoBalance = accountRepository.findById(bruno.getId()).orElseThrow().getBalance();
+        assertEquals(0, new BigDecimal("40").compareTo(adaBalance));
+        assertEquals(0, new BigDecimal("60").compareTo(brunoBalance));
+        assertEquals(1, count("SELECT count(*) FROM transfers"));
+        assertEquals(2, count("SELECT count(*) FROM ledger_entries"));
     }
 
     private int count(String sql) {
