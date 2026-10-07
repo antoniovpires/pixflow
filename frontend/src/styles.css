@@ -1,0 +1,109 @@
+@import 'tailwindcss';
+
+/*
+ * PixFlow design tokens.
+ * Dark "ink" surfaces (Nomad-like depth) + friendly rounded shapes and big type (Wise-like),
+ * with cyan as the single brand accent.
+ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-ink-950: #050a14;
+  --color-ink-900: #0a1220;
+  --color-ink-850: #0e1829;
+  --color-ink-800: #131f33;
+  --color-ink-700: #1b2a42;
+  --color-ink-600: #2a3b57;
+  --color-ink-500: #3d5070;
+
+  --color-brand-50: #ecfeff;
+  --color-brand-100: #cffafe;
+  --color-brand-200: #a5f3fc;
+  --color-brand-300: #67e8f9;
+  --color-brand-400: #22d3ee;
+  --color-brand-500: #06b6d4;
+  --color-brand-600: #0891b2;
+  --color-brand-700: #0e7490;
+
+  --radius-4xl: 2rem;
+
+  --animate-fade-up: fade-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+
+  @keyframes fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0) rotate(-2deg);
+    }
+    50% {
+      transform: translateY(-12px) rotate(-2deg);
+    }
+  }
+  @keyframes shimmer {
+    from {
+      background-position: -200% 0;
+    }
+    to {
+      background-position: 200% 0;
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+  body {
+    @apply bg-ink-950 font-sans text-slate-300 antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+  ::selection {
+    @apply bg-brand-400/30 text-white;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-400;
+  }
+}
+
+@layer components {
+  .btn,
+  .btn-primary,
+  .btn-ghost {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-semibold transition duration-200 select-none disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary {
+    @apply bg-brand-400 text-ink-950 shadow-[0_8px_30px_-8px] shadow-brand-400/60 hover:bg-brand-300 active:scale-[0.98];
+  }
+  .btn-ghost {
+    @apply border border-ink-600 text-slate-200 hover:border-ink-500 hover:bg-ink-800;
+  }
+  .card {
+    @apply rounded-3xl border border-white/8 bg-ink-850/80 backdrop-blur;
+  }
+  .label {
+    @apply mb-2 block text-sm font-medium text-slate-300;
+  }
+  .input {
+    @apply w-full rounded-2xl border border-ink-600 bg-ink-900 px-4 py-3.5 text-[15px] text-white placeholder:text-slate-500 transition hover:border-ink-500 focus:border-brand-400 focus:ring-4 focus:ring-brand-400/15 focus:outline-none;
+  }
+  .input-invalid {
+    @apply border-rose-500/70 focus:border-rose-400 focus:ring-rose-400/15;
+  }
+  .field-error {
+    @apply mt-2 text-sm text-rose-400;
+  }
+  .skeleton {
+    @apply animate-shimmer rounded-xl bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.07),transparent)] bg-size-[200%_100%] bg-ink-800;
+  }
+}

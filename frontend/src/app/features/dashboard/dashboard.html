@@ -1,0 +1,98 @@
+<div class="animate-fade-up">
+  <p class="text-sm font-medium text-brand-300">Welcome back</p>
+  <h1 class="mt-1 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">Your account</h1>
+</div>
+
+@switch (state()) {
+  @case ('loading') {
+    <div class="mt-8 space-y-6" aria-busy="true" aria-label="Loading your account">
+      <div class="skeleton h-56 !rounded-4xl"></div>
+      <div class="grid grid-cols-3 gap-4">
+        @for (i of skeletonRows; track i) {
+          <div class="skeleton h-24"></div>
+        }
+      </div>
+    </div>
+  }
+
+  @case ('error') {
+    <div class="card mt-8 flex flex-col items-center p-10 text-center" role="alert">
+      <span class="grid size-14 place-items-center rounded-full bg-rose-400/12 text-rose-300"><app-icon name="alert-circle" [size]="26" /></span>
+      <h2 class="mt-5 text-xl font-bold text-white">Something went wrong</h2>
+      <p class="mt-2 max-w-sm text-slate-400">{{ errorMessage() }}</p>
+      <button type="button" class="btn-primary mt-6" (click)="load()">Try again</button>
+    </div>
+  }
+
+  @case ('ready') {
+    @if (account(); as acc) {
+      <!-- Balance -->
+      <section
+        class="relative mt-8 animate-fade-up overflow-hidden rounded-4xl border border-brand-300/20 bg-gradient-to-br from-brand-500/25 via-ink-850 to-ink-900 p-8 sm:p-10"
+        aria-label="Balance"
+      >
+        <div aria-hidden="true" class="pointer-events-none absolute -top-24 -right-16 size-72 rounded-full bg-brand-400/25 blur-[90px]"></div>
+        <!-- decorative rings -->
+        <div aria-hidden="true" class="pointer-events-none absolute -right-20 -bottom-24 hidden size-80 rounded-full border border-brand-300/15 sm:block"></div>
+        <div aria-hidden="true" class="pointer-events-none absolute -right-8 -bottom-12 hidden size-56 rounded-full border border-brand-300/20 sm:block"></div>
+        <div aria-hidden="true" class="pointer-events-none absolute right-6 bottom-4 hidden size-32 rounded-full border border-brand-300/25 bg-brand-400/5 sm:block"></div>
+        <div class="relative flex items-start justify-between">
+          <p class="text-sm font-medium text-slate-300">Available balance</p>
+          <span class="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-white">{{ acc.currency }}</span>
+        </div>
+        <p class="relative mt-4 text-4xl font-extrabold tracking-tight text-white tabular-nums sm:text-6xl">{{ acc.balance | money: acc.currency }}</p>
+        <p class="relative mt-8 text-sm text-slate-400">Account <span class="font-mono tracking-wider text-slate-300">&bull;&bull;&bull;&bull; {{ shortAccountId() }}</span></p>
+      </section>
+
+      <!-- Quick actions -->
+      <section class="mt-6 grid grid-cols-3 gap-3 sm:gap-4" aria-label="Quick actions">
+        @for (action of actions; track action.label) {
+          <button
+            type="button"
+            disabled
+            class="card group relative cursor-not-allowed p-4 text-left opacity-70 sm:p-5"
+            [attr.title]="'Coming soon'"
+          >
+            <span class="grid size-11 place-items-center rounded-full bg-brand-400/12 text-brand-300"><app-icon [name]="action.icon" /></span>
+            <span class="mt-4 block font-semibold text-white">{{ action.label }}</span>
+            <span class="mt-0.5 hidden text-xs text-slate-500 sm:block">{{ action.hint }}</span>
+            <span class="absolute top-3 right-3 hidden rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase sm:block">Soon</span>
+          </button>
+        }
+      </section>
+
+      <!-- Recent activity -->
+      <section class="card mt-6 p-6 sm:p-8" aria-label="Recent activity">
+        <h2 class="text-lg font-bold text-white">Recent activity</h2>
+
+        @if (activity().length === 0) {
+          <div class="flex flex-col items-center py-12 text-center">
+            <span class="grid size-14 place-items-center rounded-full bg-ink-700 text-slate-400"><app-icon name="inbox" [size]="26" /></span>
+            <p class="mt-5 font-semibold text-white">No transfers yet</p>
+            <p class="mt-1 max-w-xs text-sm text-slate-500">When you send or receive money, it will show up here.</p>
+          </div>
+        } @else {
+          <ul class="mt-4 divide-y divide-white/6">
+            @for (item of activity(); track item.id) {
+              <li class="flex items-center gap-4 py-4">
+                <span
+                  class="grid size-11 shrink-0 place-items-center rounded-full"
+                  [class]="item.direction === 'sent' ? 'bg-ink-700 text-slate-300' : 'bg-brand-400/12 text-brand-300'"
+                >
+                  <app-icon [name]="item.direction === 'sent' ? 'arrow-up-right' : 'arrow-down-left'" />
+                </span>
+                <div class="min-w-0 flex-1">
+                  <p class="font-semibold text-white">{{ item.direction === 'sent' ? 'Sent' : 'Received' }}</p>
+                  <span class="mt-1 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold" [class]="statusStyle(item.status)">{{ statusLabel(item.status) }}</span>
+                </div>
+                <p class="text-lg font-bold tabular-nums" [class]="item.direction === 'received' ? 'text-brand-300' : 'text-white'">
+                  {{ item.direction === 'received' ? '+' : '\u2212' }}{{ item.amount | money }}
+                </p>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  }
+}

@@ -1,0 +1,64 @@
+<div class="min-h-dvh lg:grid lg:grid-cols-[1.15fr_1fr]">
+  <!-- Brand panel -->
+  <aside class="relative hidden overflow-hidden bg-ink-900 lg:flex lg:flex-col lg:justify-between lg:p-14">
+    <div aria-hidden="true" class="pointer-events-none absolute inset-0">
+      <div class="absolute -top-32 -left-24 size-[34rem] rounded-full bg-brand-400/20 blur-[110px]"></div>
+      <div class="absolute -right-32 bottom-0 size-[30rem] rounded-full bg-brand-700/25 blur-[120px]"></div>
+      <div
+        class="absolute inset-0 opacity-[0.35] [background-image:linear-gradient(rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.04)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_30%,transparent_75%)]"
+      ></div>
+    </div>
+
+    <app-logo class="relative" />
+
+    <div class="relative max-w-xl">
+      <h1 class="text-6xl leading-[1.02] font-extrabold tracking-tight text-white xl:text-7xl">
+        Send money at the speed of <span class="text-brand-400">Pix</span>.
+      </h1>
+      <p class="mt-6 max-w-md text-lg text-slate-400">
+        Instant transfers, a double-entry ledger you can audit, and zero lost cents - even when thousands of payments happen at once.
+      </p>
+
+      <ul class="mt-10 max-w-[16rem] space-y-4 text-slate-300">
+        <li class="flex items-center gap-3">
+          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-brand-400/12 text-brand-300"><app-icon name="zap" [size]="18" /></span>
+          Settled in seconds, 24/7
+        </li>
+        <li class="flex items-center gap-3">
+          <span class="grid size-9 shrink-0 place-items-center rounded-full bg-brand-400/12 text-brand-300"><app-icon name="shield" [size]="18" /></span>
+          Idempotent payments: a retry never pays twice
+        </li>
+      </ul>
+    </div>
+
+    <!-- Decorative floating cards -->
+    <div aria-hidden="true" class="pointer-events-none absolute right-12 bottom-24 hidden w-72 xl:block">
+      <div class="animate-float card p-5 shadow-2xl shadow-black/40">
+        <div class="flex items-center gap-3">
+          <span class="grid size-10 place-items-center rounded-full bg-brand-400/15 text-brand-300"><app-icon name="arrow-up-right" /></span>
+          <div class="min-w-0 flex-1">
+            <p class="text-sm font-semibold text-white">Sent to Bruno</p>
+            <p class="text-xs text-slate-500">bruno&#64;pixflow.dev</p>
+          </div>
+          <span class="rounded-full bg-emerald-400/12 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">Completed</span>
+        </div>
+        <p class="mt-5 text-3xl font-extrabold tracking-tight text-white tabular-nums">{{ -250 | money }}</p>
+      </div>
+      <div class="card mt-4 ml-10 -rotate-2 p-5 opacity-90">
+        <p class="text-xs font-medium tracking-wide text-slate-500 uppercase">Available balance</p>
+        <p class="mt-1 text-2xl font-extrabold tracking-tight text-brand-300 tabular-nums">{{ 12480.5 | money }}</p>
+      </div>
+    </div>
+
+    <p class="relative text-sm text-slate-500">Portfolio project - Java 21, Spring Boot, PostgreSQL, Angular.</p>
+  </aside>
+
+  <!-- Form panel -->
+  <main class="relative flex min-h-dvh items-center justify-center px-6 py-12">
+    <div aria-hidden="true" class="pointer-events-none absolute -top-40 left-1/2 size-[30rem] -translate-x-1/2 rounded-full bg-brand-500/10 blur-[110px] lg:hidden"></div>
+    <div class="relative w-full max-w-md animate-fade-up">
+      <app-logo class="mb-10 lg:hidden" />
+      <router-outlet />
+    </div>
+  </main>
+</div>
