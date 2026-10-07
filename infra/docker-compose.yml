@@ -7,8 +7,34 @@ services:
       POSTGRES_PASSWORD: pixflow
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pixflow -d pixflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  backend:
+    build: ../backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pixflow
+      SPRING_DATASOURCE_USERNAME: pixflow
+      SPRING_DATASOURCE_PASSWORD: pixflow
+      JWT_SECRET: ${JWT_SECRET}
+      PIXFLOW_SEED_ENABLED: "true"
+    ports:
+      - "8080:8080"
+  frontend:
+    build: ../frontend
+    depends_on:
+      - backend
+    environment:
+      API_URL: http://backend:8080
+    ports:
+      - "4200:80"
 
 volumes:
   postgres_data:
