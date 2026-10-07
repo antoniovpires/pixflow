@@ -45,23 +45,45 @@ A transfer runs inside one database transaction: it resolves the target account 
 | Database | PostgreSQL 17, Flyway migrations (`ddl-auto=validate`)                      |
 | Frontend | Angular 21 (standalone components, signals), Tailwind CSS v4                |
 | Testing  | JUnit 5, Testcontainers (real PostgreSQL), Vitest                           |
-| Infra    | Docker Compose (PostgreSQL)                                                 |
+| Infra    | Docker Compose (PostgreSQL, Spring Boot backend, nginx-served Angular build) |
 
 ## Quick start
 
-### Prerequisites
+### Option A: Docker (recommended)
 
-- Java 21
-- Node.js 22 and npm
-- Docker with Compose v2
-- Angular CLI 21 (`npm install -g @angular/cli`), or use `npx ng` instead
+Only Docker with Compose v2 is needed. This starts PostgreSQL, the backend and the frontend, and creates a demo user.
 
-### Run it
+```bash
+cd infra
+cp .env.example .env
+# put the output of this command after JWT_SECRET= in infra/.env
+openssl rand -base64 48
 
-1. **Start the database**
+docker compose up --build
+```
+
+Open `http://localhost:4200` and log in with the demo user:
+
+| Email              | Password            |
+| ------------------ | ------------------- |
+| `ada@pixflow.demo` | `demo-password-123` |
+
+The demo user has R$ 5,000.00 and three PIX keys (email, phone, CPF). The demo data is created by `DemoDataSeeder`, which only runs when `PIXFLOW_SEED_ENABLED=true` (set in the compose file) and is skipped if the user already exists.
+
+To start again from an empty database, run `docker compose down -v`.
+
+> The database credentials in the compose file (`pixflow`/`pixflow`) and the demo password are for local use only.
+
+### Option B: Local development
+
+Run the database in Docker and the backend and frontend on your machine, so changes reload without rebuilding images.
+
+**Prerequisites:** Java 21, Node.js 22 and npm, Docker with Compose v2, and Angular CLI 21 (`npm install -g @angular/cli`, or use `npx ng`).
+
+1. **Start the database only**
 
    ```bash
-   docker compose -f infra/docker-compose.yml up -d
+   docker compose -f infra/docker-compose.yml up -d postgres
    ```
 
 2. **Configure the backend.** The app refuses to start without a JWT signing secret (at least 32 bytes).
@@ -114,16 +136,23 @@ Everything except register, login and `/actuator/health` requires `Authorization
 
 Errors use RFC 7807 problem details: `400` validation, `404` not found, `422` business rule (insufficient balance, self-transfer, idempotency key reused with a different payload), `409` retries exhausted.
 
-Quick demo (after registering two users and creating a PIX key for the second):
+Quick demo with the seeded user. Register a second user and create a PIX key for it first, since sending to your own key is rejected:
 
 ```bash
-TOKEN=$(curl -s -X POST localhost:8080/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"ada@example.com","password":"your-password"}' | jq -r .accessToken)
+# second user and a key to send to
+curl -X POST localhost:8080/auth/register -H 'Content-Type: application/json' \
+  -d '{"name":"Bruno","email":"bruno@pixflow.demo","password":"demo-password-123"}'
+BRUNO=$(curl -s -X POST localhost:8080/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"bruno@pixflow.demo","password":"demo-password-123"}' | jq -r .accessToken)
+curl -X POST localhost:8080/pixkeys -H "Authorization: Bearer $BRUNO" -H 'Content-Type: application/json' \
+  -d '{"keyValue":"bruno@pixflow.demo","keyType":"EMAIL"}'
 
+# Ada sends R$ 50.00 to Bruno's key
+ADA=$(curl -s -X POST localhost:8080/auth/login -H 'Content-Type: application/json' \
+  -d '{"email":"ada@pixflow.demo","password":"demo-password-123"}' | jq -r .accessToken)
 curl -X POST localhost:8080/transfers \
-  -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
-  -d '{"pixKeyValue":"bruno@example.com","amount":50.00,"idempotencyKey":"3f6c1a52-0000-4000-8000-000000000001"}'
+  -H "Authorization: Bearer $ADA" -H 'Content-Type: application/json' \
+  -d '{"pixKeyValue":"bruno@pixflow.demo","amount":50.00,"idempotencyKey":"3f6c1a52-0000-4000-8000-000000000001"}'
 ```
 
 ## Tests
