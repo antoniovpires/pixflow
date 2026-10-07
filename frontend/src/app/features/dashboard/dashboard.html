@@ -47,17 +47,32 @@
       <!-- Quick actions -->
       <section class="mt-6 grid grid-cols-3 gap-3 sm:gap-4" aria-label="Quick actions">
         @for (action of actions; track action.label) {
-          <button
-            type="button"
-            disabled
-            class="card group relative cursor-not-allowed p-4 text-left opacity-70 sm:p-5"
-            [attr.title]="'Coming soon'"
-          >
-            <span class="grid size-11 place-items-center rounded-full bg-brand-400/12 text-brand-300"><app-icon [name]="action.icon" /></span>
-            <span class="mt-4 block font-semibold text-white">{{ action.label }}</span>
-            <span class="mt-0.5 hidden text-xs text-slate-500 sm:block">{{ action.hint }}</span>
-            <span class="absolute top-3 right-3 hidden rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase sm:block">Soon</span>
-          </button>
+          @if (action.href) {
+            <a
+              [routerLink]="action.href"
+              class="card group relative p-4 text-left sm:p-5"
+            >
+              <span class="grid size-11 place-items-center rounded-full bg-brand-400/12 text-brand-300"><app-icon [name]="action.icon" /></span>
+              <span class="mt-4 block font-semibold text-white">{{ action.label }}</span>
+              <span class="mt-0.5 hidden text-xs text-slate-500 sm:block">{{ action.hint }}</span>
+            </a>
+          } @else {
+            <button
+              type="button"
+              [disabled]="!action.active"
+              class="card group relative p-4 text-left sm:p-5"
+              [class.cursor-not-allowed]="!action.active"
+              [class.opacity-70]="!action.active"
+              [attr.title]="!action.active ? 'Coming soon' : undefined"
+            >
+              <span class="grid size-11 place-items-center rounded-full bg-brand-400/12 text-brand-300"><app-icon [name]="action.icon" /></span>
+              <span class="mt-4 block font-semibold text-white">{{ action.label }}</span>
+              <span class="mt-0.5 hidden text-xs text-slate-500 sm:block">{{ action.hint }}</span>
+              @if (!action.active) {
+                <span class="absolute top-3 right-3 hidden rounded-full bg-white/8 px-2 py-0.5 text-[10px] font-semibold tracking-wide text-slate-400 uppercase sm:block">Soon</span>
+              }
+            </button>
+          }
         }
       </section>
 

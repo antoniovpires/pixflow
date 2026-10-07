@@ -17,6 +17,11 @@ export const routes: Routes = [
         title: 'Home - PixFlow',
         loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
       },
+      {
+        path: 'pixkeys',
+        title: 'PixKeys - PixFlow',
+        loadComponent: () => import('./features/pixkeys/pixkeys').then((m) => m.Pixkeys),
+      },
     ],
   },
   // Public area: signed-in users are redirected home.

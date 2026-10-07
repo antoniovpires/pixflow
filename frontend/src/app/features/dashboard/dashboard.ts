@@ -8,6 +8,8 @@ import { TransfersApi } from '../../core/api/transfers.api';
 import { Icon, IconName } from '../../shared/ui/icon';
 import { MoneyPipe } from '../../shared/ui/money.pipe';
 
+import { RouterLink } from '@angular/router';
+
 interface ActivityItem {
   id: string;
   direction: 'sent' | 'received';
@@ -19,6 +21,8 @@ interface QuickAction {
   label: string;
   hint: string;
   icon: IconName;
+  active: boolean;
+  href?: string;
 }
 
 const STATUS_STYLES: Record<TransferStatus, string> = {
@@ -31,7 +35,7 @@ const STATUS_STYLES: Record<TransferStatus, string> = {
 
 @Component({
   selector: 'app-dashboard',
-  imports: [Icon, MoneyPipe],
+  imports: [Icon, MoneyPipe, RouterLink],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './dashboard.html',
 })
@@ -59,11 +63,10 @@ export class Dashboard {
 
   protected readonly shortAccountId = computed(() => this.account()?.id.slice(-4).toUpperCase() ?? '');
 
-  // Coming in the next slices: they are shown (disabled) so the screen reads as a real product.
   protected readonly actions: QuickAction[] = [
-    { label: 'Send', hint: 'To a PIX key', icon: 'send' },
-    { label: 'My keys', hint: 'Receive money', icon: 'key' },
-    { label: 'Statement', hint: 'Full ledger', icon: 'receipt' },
+    { label: 'Send', hint: 'To a PIX key', icon: 'send', active: false },
+    { label: 'My keys', hint: 'Receive money', icon: 'key', active: false, href: '/pixkeys' },
+    { label: 'Statement', hint: 'Full ledger', icon: 'receipt', active: false },
   ];
 
   protected readonly skeletonRows = [1, 2, 3];

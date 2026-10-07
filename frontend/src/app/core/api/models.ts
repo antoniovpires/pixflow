@@ -47,3 +47,12 @@ export interface ProblemDetail {
   /** Field name -> message, present on 400 validation errors. */
   errors?: Record<string, string>;
 }
+
+export type KeyType = 'CPF' | 'EMAIL' | 'PHONE_NUMBER';
+
+export interface PixKey {
+  id: string;
+  accountId: string;
+  keyValue: string;
+  keyType: KeyType;
+}
